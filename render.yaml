@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: pdf-access-auditor
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    autoDeploy: false
+    # Scale-out (paid plans only, check the Render dashboard): numInstances: 2
+    envVars:
+      - key: PRODUCTION
+        value: "1"
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: MAX_CONCURRENT_AUDITS
+        value: "1"
+      - key: BATCH_WORKERS
+        value: "1"
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: SSO_ALLOWED_DOMAINS
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false

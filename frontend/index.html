@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PDF Accessibility Auditor</title>
+  <style>
+:root { --ink: #12233f; --muted: #5f7087; --paper: #fbfcfe; --surface: #fff; --line: #d9e2ec; --accent: #1769c2; --accent-dark: #0e4b91; --teal: #007c83; --bad: #b4233c; --bad-soft: #fff0f2; --ok: #087443; --ok-soft: #eaf8f1; --warn: #9a5b00; --warn-soft: #fff7e8; --shadow: 0 18px 50px rgba(18, 35, 63, .08); }
+* { box-sizing: border-box; }
+html { background: var(--paper); }
+body { font-family: "Avenir Next", "Segoe UI", sans-serif; color: var(--ink); background: radial-gradient(circle at 90% 0%, #e9f5f7 0, transparent 34rem), var(--paper); margin: 0 auto; max-width: 74rem; padding: 1.25rem clamp(1rem, 4vw, 3.5rem) 4rem; line-height: 1.5; font-size: 1rem; }
+.skip { position: absolute; left: -999px; }
+.skip:focus { left: 1rem; top: 1rem; background: var(--surface); padding: .65rem .9rem; z-index: 10; box-shadow: var(--shadow); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+header { padding-bottom: 3rem; }
+.topline, .results-heading, .section-heading, .panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.brand { display: inline-flex; align-items: center; gap: .65rem; color: var(--ink); font-weight: 700; text-decoration: none; letter-spacing: -.02em; }
+.brand-mark { display: grid; place-items: center; width: 2.2rem; height: 2.2rem; color: #fff; background: var(--ink); border-radius: .55rem; font-size: .78rem; letter-spacing: .04em; }
+nav { display: flex; align-items: center; gap: 1rem; font-size: .9rem; }
+a { color: var(--accent-dark); }
+.highlight-card { scroll-margin-top: 16px; }
+.highlight-card.flash { outline: 3px solid #d61f1f; outline-offset: 4px; }
+.hero-copy { max-width: 43rem; padding-top: 5rem; }
+.eyebrow { color: var(--teal); font-size: .72rem; font-weight: 800; letter-spacing: .14em; margin: 0 0 .55rem; text-transform: uppercase; }
+h1, h2, h3 { line-height: 1.12; letter-spacing: -.04em; margin: 0; }
+h1 { font-family: Georgia, serif; font-size: clamp(2.7rem, 7vw, 5.3rem); font-weight: 500; max-width: 11ch; }
+h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); }
+h3 { font-size: 1.25rem; }
+.lede { color: var(--muted); font-size: 1.16rem; max-width: 41rem; margin: 1.2rem 0 0; }
+.workspace, .panel { background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.workspace { padding: clamp(1.25rem, 4vw, 2.5rem); }
+.limit, .panel-note { color: var(--muted); font-size: .82rem; }
+form { margin-top: 1.75rem; }
+.dropzone { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 13rem; padding: 2rem; border: 1.5px dashed #9fb1c6; background: #f7fafc; text-align: center; cursor: pointer; transition: border-color .2s, background .2s, transform .2s; }
+.dropzone:hover, .dropzone.dragover { border-color: var(--accent); background: #f0f7ff; transform: translateY(-2px); }
+.dropzone input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.upload-icon { display: grid; place-items: center; width: 2.8rem; height: 2.8rem; margin-bottom: .8rem; border: 1px solid #a8c7e8; border-radius: 50%; color: var(--accent); font-size: 1.8rem; font-weight: 300; }
+.drop-title { font-weight: 750; }
+.drop-hint, .hint { color: var(--muted); font-size: .85rem; }
+.drop-hint { margin-top: .3rem; }
+.file-meta { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: .75rem; padding: .75rem 1rem; border: 1px solid #b8d4ee; background: #f1f7fd; font-size: .9rem; }
+.file-meta strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-meta span { color: var(--muted); flex: 0 0 auto; }
+.options-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 1.5rem; margin-top: 1.3rem; }
+.ai-row { display: flex; gap: .55rem; align-items: flex-start; }
+.ai-row label { font-size: .9rem; font-weight: 650; }
+.ai-row input { accent-color: var(--accent); margin-top: .2rem; }
+.hint { margin: 0; max-width: 28rem; text-align: right; }
+.form-actions { display: flex; align-items: center; gap: 1rem; margin-top: 1.5rem; }
+.mode-switch { display: flex; align-items: center; gap: .7rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .86rem; }
+.text-button { padding: 0; color: var(--accent-dark); background: transparent; box-shadow: none; font-size: .86rem; text-decoration: underline; }
+.text-button:hover:not(:disabled) { background: transparent; color: var(--accent); }
+button { background: var(--accent); color: #fff; border: 0; padding: .78rem 1.35rem; font: inherit; font-weight: 750; border-radius: .4rem; cursor: pointer; box-shadow: 0 5px 14px rgba(23, 105, 194, .2); }
+button:hover:not(:disabled) { background: var(--accent-dark); }
+button:disabled { background: #8292a5; cursor: wait; box-shadow: none; }
+.secondary-button { background: transparent; color: var(--accent-dark); border: 1px solid #a8bfd8; box-shadow: none; }
+.secondary-button:hover:not(:disabled) { background: #eef6ff; }
+:focus-visible { outline: 3px solid #f5a623; outline-offset: 3px; }
+#status { color: var(--muted); font-size: .88rem; }
+.notice { margin-top: 1rem; padding: .9rem 1rem; border-left: 4px solid var(--bad); background: var(--bad-soft); color: #7e1d2e; }
+#results { padding-top: 4rem; }
+.results-heading { margin-bottom: 1.25rem; }
+.summary-grid { display: grid; grid-template-columns: 1.35fr repeat(3, 1fr); gap: .75rem; }
+.score-card, .summary-card { min-height: 8rem; padding: 1.25rem; border: 1px solid var(--line); background: var(--surface); }
+.score-card { color: #fff; background: var(--ink); border-color: var(--ink); }
+.card-label { display: block; color: var(--muted); font-size: .75rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+.score-card .card-label { color: #a9c5e2; }
+.score-card strong, .summary-card strong { display: block; margin: .65rem 0 .15rem; font-size: 2rem; letter-spacing: -.05em; }
+.score-card strong { font-family: Georgia, serif; font-size: 3.1rem; font-weight: 500; }
+.score-card span:last-child, .summary-card span:last-child { color: var(--muted); font-size: .84rem; }
+.score-card span:last-child { color: #d5e6f7; }
+.report-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 1rem; margin-top: 1rem; }
+.panel { padding: 1.4rem; box-shadow: none; }
+.panel-heading { align-items: flex-start; padding-bottom: 1.1rem; border-bottom: 1px solid var(--line); }
+.criteria-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; padding-top: 1rem; }
+.criterion { display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: .7rem .75rem; background: #f7f9fb; font-size: .88rem; }
+.criterion-name { color: var(--ink); }
+.status-pill { display: inline-flex; align-items: center; gap: .3rem; padding: .24rem .48rem; border-radius: 99px; font-size: .7rem; font-weight: 800; white-space: nowrap; }
+.status-pill::before { content: ""; width: .42rem; height: .42rem; border-radius: 50%; background: currentColor; }
+.Passed { color: var(--ok); }.Failed { color: var(--bad); }.Cannot { color: var(--warn); }.Not { color: #64748b; }
+.status-pill.Passed { background: var(--ok-soft); }.status-pill.Failed { background: var(--bad-soft); }.status-pill.Cannot { background: var(--warn-soft); }.status-pill.Not { background: #eef2f6; }
+#findings { padding-left: 1.35rem; margin: 1rem 0 0; }
+#findings li { padding: 0 0 .9rem .35rem; margin-bottom: .9rem; border-bottom: 1px solid #edf1f5; }
+.finding-head { display: block; margin-bottom: .25rem; font-weight: 750; }
+.finding-message { display: block; color: var(--muted); font-size: .9rem; }
+.fix { display: block; margin-top: .45rem; color: var(--ink); font-size: .86rem; }.fix::before { content: "Fix / "; color: var(--teal); font-weight: 800; }
+.highlight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 1rem; padding-top: 1rem; }
+.highlight-card { margin: 0; padding: .55rem; border: 1px solid var(--line); background: #f7f9fb; }.highlight-card img { display: block; width: 100%; border: 1px solid #bbc8d6; }.highlight-card figcaption { padding: .55rem .15rem .1rem; color: var(--muted); font-size: .78rem; }
+.empty-state { color: var(--muted); font-size: .9rem; margin: 1rem 0 0; }
+.batch-workspace { margin-top: 1rem; }.batch-workspace[hidden] { display: none; }
+.batch-results { margin-top: 1.5rem; }.batch-summary { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: 1rem; color: var(--muted); font-size: .86rem; }.batch-summary strong { color: var(--ink); }
+.batch-list { display: grid; gap: .6rem; }.batch-item { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 1rem; padding: .85rem 1rem; border: 1px solid var(--line); background: #f7f9fb; }.batch-item-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }.batch-item-score { font-family: Georgia, serif; font-size: 1.25rem; }.batch-item-finding { color: var(--muted); font-size: .8rem; }
+.status-hero { padding-top: 4rem; }
+main > section { margin-top: 1.5rem; padding: clamp(1.1rem, 3vw, 1.7rem); border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow); }
+.section-description { color: var(--muted); margin: .75rem 0 1.1rem; }
+.score { color: var(--accent-dark); font-size: 1.1rem; font-weight: 800; margin: 0; }
+.status-summary { display: flex; align-items: center; gap: .8rem; margin: 1rem 0; padding: .8rem 1rem; background: #f5f8fb; border-left: 4px solid var(--teal); }
+.status-summary strong { font-size: .92rem; }.status-summary span { color: var(--muted); font-size: .86rem; }
+.metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin: 1rem 0 1.25rem; }
+.metric-card { min-height: 6.5rem; padding: 1rem; border: 1px solid var(--line); background: #f7f9fb; }.metric-card strong { display: block; margin-top: .65rem; font-size: 1.45rem; letter-spacing: -.03em; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 42rem; }
+th, td { padding: .75rem .7rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+th { color: var(--muted); font-size: .73rem; letter-spacing: .08em; text-transform: uppercase; }
+td { font-size: .88rem; }
+@media (max-width: 760px) { .metric-grid { grid-template-columns: 1fr 1fr; } .status-summary { align-items: flex-start; flex-direction: column; gap: .2rem; } }
+@media (max-width: 760px) { body { padding-top: .9rem; } .topline, .results-heading, .section-heading { align-items: flex-start; flex-direction: column; } nav { flex-wrap: wrap; } .hero-copy { padding-top: 3.5rem; } .summary-grid, .report-grid { grid-template-columns: 1fr 1fr; } .score-card { grid-column: span 2; } .criteria-list { grid-template-columns: 1fr; } .options-row, .form-actions { align-items: stretch; flex-direction: column; } .hint { text-align: left; } .form-actions button { width: 100%; } .mode-switch { align-items: flex-start; flex-direction: column; } .batch-item { grid-template-columns: 1fr auto; } .batch-item-finding { grid-column: span 2; } }
+@media (max-width: 450px) { .summary-grid, .report-grid { grid-template-columns: 1fr; } .score-card { grid-column: auto; } .workspace, .panel { padding: 1rem; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+.pager { display: flex; align-items: center; justify-content: center; gap: 1rem; padding-top: 1rem; }
+.pager button { min-width: 2.75rem; min-height: 2.75rem; padding: 0; font-size: 1.3rem; }
+.pager button:disabled { opacity: .35; cursor: default; box-shadow: none; }
+#page-label { font-weight: 700; min-width: 11rem; text-align: center; }
+.highlight-grid { display: flex; justify-content: center; }
+.highlight-card { width: 100%; max-width: 38rem; }
+.highlight-card[hidden] { display: none; }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to main content</a>
+  <header>
+    <div class="topline">
+      <a class="brand" href="/" aria-label="PDF Accessibility Auditor home">
+        <span class="brand-mark" aria-hidden="true">PA</span>
+        <span>PDF Accessibility Auditor</span>
+      </a>
+      <nav aria-label="Site">
+        <button type="button" class="text-button" id="show-status">Platform status</button>
+        <span id="auth-bar"></span>
+      </nav>
+    </div>
+    <div class="hero-copy">
+      <p class="eyebrow">Document intelligence / accessibility review</p>
+      <h1>Make every PDF easier to read.</h1>
+      <p class="lede">Inspect the structure, language, visual clarity and screen-reader readiness of a notice, circular or study document.</p>
+    </div>
+  </header>
+  <main id="main">
+    <section class="workspace" aria-labelledby="workspace-heading">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Start a review</p>
+          <h2 id="workspace-heading" tabindex="-1">Upload a document</h2>
+        </div>
+        <span class="limit">PDF / up to 20 MB</span>
+      </div>
+      <form id="upload-form">
+        <label class="dropzone" for="file" id="dropzone">
+          <span class="upload-icon" aria-hidden="true">+</span>
+          <span class="drop-title">Drop a PDF here, or browse files</span>
+          <span class="drop-hint">Your document is processed in memory and not stored.</span>
+          <input id="file" name="file" type="file" accept="application/pdf" required>
+        </label>
+        <div id="file-meta" class="file-meta" hidden></div>
+        <div class="options-row">
+          <div class="ai-row">
+            <input id="use-ai" name="use_ai" type="checkbox" disabled>
+            <label for="use-ai">Use AI for alternative-text quality</label>
+          </div>
+          <p id="ai-note" class="hint">Optional. Page images are sent to an external AI service only when enabled.</p>
+        </div>
+        <div class="form-actions">
+          <button type="submit" id="submit"><span aria-hidden="true">Run</span> audit</button>
+          <p id="status" role="status" aria-live="polite"></p>
+        </div>
+      </form>
+      <div class="mode-switch" aria-label="Audit mode">
+        <span>Need to review several files?</span>
+        <button type="button" class="text-button" id="show-batch">Open batch audit</button>
+      </div>
+    </section>
+
+    <section class="workspace batch-workspace" id="batch-workspace" aria-labelledby="batch-heading" hidden>
+      <div class="section-heading">
+        <div><p class="eyebrow">Batch review</p><h2 id="batch-heading" tabindex="-1">Compare several PDFs</h2></div>
+        <button type="button" class="secondary-button" id="show-single">Single audit</button>
+      </div>
+      <p class="section-description">Run up to 5 documents in parallel. Results include each score, top findings and total processing time.</p>
+      <form id="batch-form">
+        <label class="dropzone batch-dropzone" for="batch-files" id="batch-dropzone">
+          <span class="upload-icon" aria-hidden="true">+</span>
+          <span class="drop-title">Drop multiple PDFs here, or browse files</span>
+          <span class="drop-hint">Maximum 5 files / 40 MB total</span>
+          <input id="batch-files" name="files" type="file" accept="application/pdf" multiple required>
+        </label>
+        <div id="batch-file-meta" class="file-meta" hidden></div>
+        <div class="form-actions"><button type="submit" id="batch-submit">Run batch audit</button><p id="batch-status" role="status" aria-live="polite"></p></div>
+      </form>
+      <div id="batch-results" class="batch-results" hidden aria-live="polite"></div>
+    </section>
+
+    <div id="error-summary" class="notice error" role="alert" hidden></div>
+
+    <section id="results" hidden aria-labelledby="results-heading">
+      <div class="results-heading">
+        <div>
+          <p class="eyebrow">Review complete</p>
+          <h2 id="results-heading" tabindex="-1">Accessibility report</h2>
+        </div>
+        <button type="button" class="secondary-button" id="new-audit">New audit</button>
+      </div>
+      <div class="summary-grid" aria-label="Audit summary">
+        <div class="score-card" id="score-card">
+          <span class="card-label">Overall score</span>
+          <strong id="score-value">--</strong>
+          <span id="score-grade">Waiting for report</span>
+        </div>
+        <div class="summary-card"><span class="card-label">Pages reviewed</span><strong id="pages-value">--</strong><span id="pages-detail">--</span></div>
+        <div class="summary-card"><span class="card-label">Criteria passed</span><strong id="passed-value">--</strong><span id="criteria-detail">--</span></div>
+        <div class="summary-card"><span class="card-label">AI assistance</span><strong id="ai-value">--</strong><span id="ai-detail">Optional review</span></div>
+      </div>
+      <div class="report-grid">
+        <section class="panel criteria-panel" aria-labelledby="criteria-heading">
+          <div class="panel-heading"><div><p class="eyebrow">Coverage</p><h3 id="criteria-heading">Criteria checked</h3></div><span class="legend" id="criteria-legend"></span></div>
+          <div id="criteria" class="criteria-list"></div>
+        </section>
+        <section class="panel findings-panel" aria-labelledby="findings-heading">
+          <div class="panel-heading"><div><p class="eyebrow">What to improve</p><h3 id="findings-heading">Findings and fixes</h3></div></div>
+          <ol id="findings"></ol>
+        </section>
+      </div>
+      <section class="panel highlights-panel" aria-labelledby="highlights-heading">
+        <div class="panel-heading"><div><p class="eyebrow">Visual evidence</p><h3 id="highlights-heading">Highlighted pages</h3></div><span class="panel-note">Problem areas are outlined in red.</span></div>
+        <div id="highlights" class="highlight-grid"></div>
+
+<div class="pager" id="pager" hidden>
+    <button type="button" id="page-prev" aria-label="Previous page">&lt;</button>
+    <span id="page-label" role="status" aria-live="polite">Page 1 (1/1)</span>
+    <button type="button" id="page-next" aria-label="Next page">&gt;</button>
+</div>
+      </section>
+    </section>
+
+    <section id="status-view" aria-labelledby="status-heading" hidden>
+      <div class="section-heading">
+        <div><p class="eyebrow">Operations / trust center</p><h2 id="status-heading" tabindex="-1">Platform status</h2></div>
+        <button type="button" class="secondary-button" id="hide-status">Back to auditor</button>
+      </div>
+      <p class="section-description">A live view of the service posture, instance health and safeguards protecting document reviews.</p>
+
+    <p id="platform-status" role="status" aria-live="polite"></p>
+
+    <section aria-labelledby="posture-heading">
+      <div class="section-heading">
+        <div><p class="eyebrow">Trust center</p><h2 id="posture-heading">Security posture</h2></div>
+        <p id="posture-score" class="score"></p>
+      </div>
+      <div id="posture-summary" class="status-summary"></div>
+      <div class="table-wrap"><table>
+        <caption class="sr-only">Security posture checks</caption>
+        <thead><tr><th scope="col">Category</th><th scope="col">Check</th><th scope="col">Result</th><th scope="col">Detail</th></tr></thead>
+        <tbody id="posture"></tbody>
+      </table></div>
+    </section>
+
+    <section aria-labelledby="metrics-heading">
+      <div class="section-heading">
+        <div><p class="eyebrow">Runtime telemetry</p><h2 id="metrics-heading">Instance utilization</h2></div>
+        <button type="button" id="refresh">Refresh now</button>
+      </div>
+      <p class="section-description">This page shows the instance that served your request. Behind a load balancer the name changes between refreshes.</p>
+      <div id="metric-cards" class="metric-grid"></div>
+      <div class="table-wrap"><table>
+        <caption class="sr-only">Instance metrics</caption>
+        <thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead>
+        <tbody id="metrics"></tbody>
+      </table></div>
+    </section>
+      </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

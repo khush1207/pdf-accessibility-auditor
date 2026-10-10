@@ -1,0 +1,31 @@
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+backend/.venv/
+
+# Test and coverage artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Secrets and local environment files
+.env
+.env.*
+!.env.example
+
+# Test samples
+backend/tests/samples/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
