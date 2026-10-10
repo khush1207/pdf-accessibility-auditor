@@ -50,11 +50,17 @@ jobs:
     steps:
       - name: Trigger Render deploy
         run: curl --fail --silent -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+
       - name: Wait for the live service
         run: |
           sleep 60
           for i in $(seq 1 30); do
-            if curl --fail --silent "${{ secrets.RENDER_URL }}/api/health"; then echo; exit 0; fi
+            if curl --fail --silent --show-error "${{ vars.RENDER_URL }}/api/health"; then
+              echo
+              exit 0
+            fi
             sleep 10
           done
+          echo "Render health check failed after repeated attempts."
           exit 1
+
