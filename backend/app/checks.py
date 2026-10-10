@@ -212,8 +212,13 @@ def tag_findings(tagged, records, n):
     return [Finding("semantic_tags", PASSED, "Tags and heading hierarchy look valid.")]
 
 
-def alt_findings(doc, tagged, records, images, use_ai):
-    figures = [r for r in records if r["role"] == "Figure"]
+def alt_findings(doc, tagged, records, images, use_ai, n):
+    figures = [
+    r for r in records
+    if r["role"] == "Figure"
+    and r["page"] is not None
+    and 0 <= r["page"] < n
+]
     if not images and not figures:
         return [Finding("alt_text", NOT_PRESENT, "No informative images found.")]
     out = []
@@ -228,6 +233,8 @@ def alt_findings(doc, tagged, records, images, use_ai):
                            "Tag informative images as figures, mark decorative ones as artifacts.", severity="high"))
     ai_used = 0
     for fig in figures:
+        if fig["page"] is not None and fig["page"] >= len(doc):
+            continue
         alt = fig["alt"] or fig["actual"]
         if not alt:
             out.append(Finding("alt_text", FAILED, "Figure has no alternative text.",
@@ -278,7 +285,7 @@ def check_structure(pdf, doc, n, scanned, use_ai=False):
     records = collect(pdf) if tagged else []
     images = page_images(doc, n, scanned)
     out = tag_findings(tagged, records, n)
-    out += alt_findings(doc, tagged, records, images, use_ai)
+    out += alt_findings(doc, tagged, records, images, use_ai, n)
     out += table_findings(doc, n, scanned, tagged, records)
     return out, tagged
 
