@@ -87,7 +87,7 @@ jobs:
             --instance-ids i-0ed0793a87305f463 \
             --document-name AWS-RunShellScript \
             --comment "GitHub Actions deployment" \
-            --parameters 'commands=["cd /home/ubuntu/pdf-accessibility-auditor && git pull --ff-only origin main && docker compose up -d --build --remove-orphans"]' \
+                      --parameters 'commands=["cd /home/ubuntu/pdf-accessibility-auditor && sudo -u ubuntu git pull --ff-only origin main && docker compose up -d --build --remove-orphans"]' \
             --query 'Command.CommandId' \
             --output text)
 
